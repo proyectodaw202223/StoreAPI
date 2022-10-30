@@ -24,7 +24,6 @@ class Order extends Model
      * 
      * @var Customer
      */
-
     private Customer $customer;
     
     /**
