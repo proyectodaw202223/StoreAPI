@@ -15,22 +15,4 @@ class OrderLine extends Model
      * @var array
      */
     protected $guarded = [];
-
-    /**
-     * The Item associated with an OrderLine,
-     * this variable is meant to be used to parse 
-     * OrderLine data alongside its Item to json 
-     * when an OrderLine resource is requested to the API.
-     * 
-     * @var Item
-     */
-    private Item $item;
-
-    public function getItem() {
-        return $this->item;
-    }
-
-    public function setItem(Iem $item) {
-        $this->item = $item;
-    }
 }

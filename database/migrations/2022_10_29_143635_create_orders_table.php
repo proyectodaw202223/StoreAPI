@@ -21,11 +21,11 @@ return new class extends Migration
             $table->dateTime('paymentDateTime');
             $table->longText('comments')->nullable();
             $table->enum('status', [
-                'Created',
-                'Paid',
-                'In Management',
-                'Sent',
-                'Canceled'
+                'Creado',
+                'Pagado',
+                'Gestion',
+                'Enviado',
+                'Cancelado'
             ]);
 
             $table->foreign('customerId')->references('id')->on('customers');
