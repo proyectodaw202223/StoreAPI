@@ -15,22 +15,4 @@ class Product extends Model
      * @var array
      */
     protected $guarded = [];
-
-    /**
-     * An array of Items associated with a Product,
-     * this variable is meant to be used to parse 
-     * Product data alongside its Items to json 
-     * when a Product resource is requested to the API.
-     * 
-     * @var Array
-     */
-    private Array $items;
-
-    public function getItems() {
-        return $this->items;
-    }
-
-    public function setItems(Array $items) {
-        $this->items = $items;
-    }
 }

@@ -15,22 +15,4 @@ class Customer extends Model
      * @var array
      */
     protected $guarded = [];
-
-    /**
-     * An array of orders associated with a Customer,
-     * this variable is meant to be used to parse 
-     * Customer data alongside its Orders to json 
-     * when a Customer resource is requested to the API.
-     * 
-     * @var Array
-     */
-    private Array $orders;
-
-    public function getOrders() {
-        return $this->orders;
-    }
-
-    public function setOrders(Array $orders) {
-        $this->orders = $orders;
-    }
 }
