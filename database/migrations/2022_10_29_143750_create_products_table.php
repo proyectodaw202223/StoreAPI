@@ -20,9 +20,9 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->decimal('price', 8, 2);
             $table->enum('category', [
-                'Bisutería',
+                'Bisuteria',
                 'Lana',
-                'Hama - Beads',
+                'HamaBeads',
                 'Personalizaciones'
             ]);
             $table->enum('subcategory', [
@@ -32,7 +32,7 @@ return new class extends Migration
                 'Patucos',
                 'Gorros',
                 'Posavasos',
-                'Marcos de Fotos',
+                'MarcosFotos',
                 'Carteras',
                 'Llaveros'
             ])->nullable();
