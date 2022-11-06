@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Enums;
 
-enum OrderStatus {
-    case Creado;
-    case Pagado;
-    case Gestion;
-    case Enviado;
-    case Cancelado;
+enum ProductItemSize {
+    case S;
+    case M;
+    case L;
 
     /**
      * Returns a string value to be displayed.
@@ -16,23 +14,15 @@ enum OrderStatus {
      */
     public function getDisplayValue() {
         switch ($this->name) {
-            case OrderStatus::Creado:
+            case ProductItemSize::S:
                 $displayValue = $this->name;
                 break;
 
-            case OrderStatus::Pagado:
+            case ProductItemSize::M:
                 $displayValue = $this->name;
                 break;
-
-            case OrderStatus::Gestion:
-                $displayValue = "En Gestión";
-                break;
-
-            case OrderStatus::Enviado:
-                $displayValue = $this->name;
-                break;
-
-            case OrderStatus::Cancelado:
+                
+            case ProductItemSize::L:
                 $displayValue = $this->name;
                 break;
         }

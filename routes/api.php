@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\CustomerController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -20,40 +22,35 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get(
     'customer/{id}',
-    'App\Http\Controllers\CustomerController@getById'
-);
+    [CustomerController::class, 'getById']
+)->name('getCustomerById');
 
 Route::get(
     'customer/credentials/{email}/{password}',
-    'App\Http\Controllers\CustomerController@getByEmailAndPassword'
-);
-
-Route::get(
-    'customer/{email}',
-    'App\Http\Controllers\CustomerController@existsCustomerByEmail'
-);
+    [CustomerController::class, 'getByEmailAndPassword']
+)->name('getCustomerByEmailAndPassword');
 
 Route::get(
     'customer/{id}/orders',
-    'App\Http\Controllers\CustomerController@getCustomerOrdersByCustomerId'
-);
+    [CustomerController::class, 'getCustomerAndOrdersByCustomerId']
+)->name('getCustomerAndOrdersByCustomerId');
 
 Route::get(
-    'customer/{id}/active-orders',
-    'App\Http\Controllers\CustomerController@getCustomerAndActiveOrderByCustomerId'
-);
+    'customer/{id}/paid-orders',
+    [CustomerController::class, 'getCustomerAndPaidOrdersByCustomerId']
+)->name('getCustomerAndPaidOrdersByCustomerId');
 
 Route::post(
     'customer',
-    'App\Http\Controllers\CustomerController@create'
-);
+    [CustomerController::class, 'create']
+)->name('createCustomer');
 
 Route::put(
     'customer/{customer}',
-    'App\Http\Controllers\CustomerController@update'
-);
+    [CustomerController::class, 'update']
+)->name('updateCustomer');
 
 Route::delete(
     'customer/{customer}',
-    'App\Http\Controllers\CustomerController@delete'
-);
+    [CustomerController::class, 'delete']
+)->name('deleteCustomer');
