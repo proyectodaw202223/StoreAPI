@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('name');
-            $table->longText('description')->nullable();
+            $table->string('name', 60);
+            $table->string('description', 255)->nullable();
             $table->decimal('price', 8, 2);
             $table->enum('category', [
                 'Bisuteria',

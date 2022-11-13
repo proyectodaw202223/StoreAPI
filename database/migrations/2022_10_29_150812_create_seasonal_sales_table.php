@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('slogan');
-            $table->longText('description')->nullable();
+            $table->string('description', 255)->nullable();
             $table->dateTime('validFromDateTime');
             $table->dateTime('validToDateTime');
             $table->boolean('isCanceled');
