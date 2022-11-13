@@ -1,66 +1,118 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Configurar Contenedor de Desarrollo
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+La pila multicontenedor de desarrollo consiste en un contenedor de mysql, uno de phpmyadmin y uno de ubuntu con laravel instalado que se contruye con un Dockerfile. Para montar la pila pon los siguientes archivos en un directorio y ejecuta `docker-compose up -d`.
 
-## About Laravel
+### docker-compose.yml
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**MySQL:** El servicio corre en el puerto 3307 del host pero se puede cambiar a otro puerto si lo tienes ocupado por otro servicio, acuerdate de configurar el puerto correcto en el fichero `.env` del proyecto laravel. El volumen `./volumes/initdb` se usa para ejecutar los scripts sql que contenga el directorio al crear el contenedor (de momento está vacio y no hace nada). El volumen `./volumes/mysql` se usa para conservar las bases de datos si eliminas el contenedor y creas uno nuevo.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**PhpMyAdmin:** PhpMyAdmin corre en el puerto 8100 del host, lo puedes cambiar si tienes el puerto ocupado no influye en nada. Para iniciar sesión hay que especificar Server: mysql Username: root Password: root.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**StoreAPI:** La API se contruye con el Dockerfile y usa la red del host esto quiere decir que cuando se ejecute `php artisan serve` (se ejecuta cada vez que se inicia el contenedor) el contenedor empezará a probar todos los puertos del host desde el 8000 hacia arriba y se ejecutar en el primero que no esté ocupado.
 
-## Learning Laravel
+```yml
+version: '3'
+services:
+  mysql:
+    # https://hub.docker.com/_/mysql
+    image: mysql:latest
+    container_name: proyecto-daw-mysql
+    restart: unless-stopped
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./volumes/initdb/:/docker-entrypoint-initdb.d
+      - ./volumes/mysql:/var/lib/mysql
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+  phpmyadmin:
+    # https://hub.docker.com/_/phpmyadmin
+    image: phpmyadmin:latest
+    container_name: proyecto-daw-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - 8100:80
+    environment:
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: root
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+  store-api:
+    build: .
+    container_name: proyecto-daw-store-api
+    restart: unless-stopped
+    volumes:
+      - ./StoreAPI:/StoreAPI
+    network_mode: host
+    depends_on:
+      - mysql
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```
 
-## Laravel Sponsors
+### Dockerfile
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+El Dockerfile crea una imagen a partir de la imagen de ubuntu:22.04 en la que se instala todo lo necesario para desarrollar con Laravel. Se usa git para bajar todos los cambios del repositorio de GitHub a un proyecto de Laravel nuevo, se hace de esta forma en luegar de clonando el repositorio porque hay archivos como el `.env` que no se encuentran en el repo, al crear un proyecto nuevo de Laravel se crean estos ficheros y deben ser configurados por el usuario del contedor.
 
-### Premium Partners
+```Dockerfile
+FROM ubuntu:22.04
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+# Copy entrypoint script to /
+COPY ./docker-entrypoint.sh /
 
-## Contributing
+RUN apt update
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Install git, php and laravel dependencies
+RUN DEBIAN_FRONTEND=noninteractive apt install -qq -y \
+git php openssl php-common php-curl php-json php-mbstring php-mysql php-xml php-zip
 
-## Code of Conduct
+# Install composer from official guide: https://getcomposer.org/download/
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611085589f1f3ddf8b3c52d662cd01d4ba75c0ee0459970c2200a51f492d557530c71c15d8dba01eae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
+RUN mv composer.phar /usr/local/bin/composer
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Install laravel
+RUN composer global require laravel/installer
 
-## Security Vulnerabilities
+# Add the directory /.composer/vendor/bin/ to the PATH on startup.
+RUN echo "export PATH=~/.composer/vendor/bin/:$PATH" >> ~/.bashrc
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Create Laravel proyect
+RUN composer create-project --prefer-dist laravel/laravel StoreAPI-bkp
 
-## License
+WORKDIR /StoreAPI-bkp
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Delete laravel default migrations and Models
+RUN rm -f database/migrations/*
+RUN rm -f app/Models/*
+
+# Init repository with latest commits from GitHub
+RUN git init
+RUN git remote add origin https://github.com/proyectodaw202223/StoreAPI
+RUN git fetch --all
+RUN git reset --hard origin/master
+
+RUN mkdir ../StoreAPI
+WORKDIR /StoreAPI
+
+CMD ["/docker-entrypoint.sh"]
+```
+
+### docker-entrypoint.sh
+
+Esto es un script de bash que está configurado en el Dockerfile para ejecutarse cada vez que se inicia el contenedor de desarrollo. El script copia el contenido de /StoreAPI-bkp (aquí es donde el Dockerfile baja el código fuente del repo de GitHub) a /StoreAPI si está vacio (este es el volumen compartido con el host para poder editar el código); despues ejecuta `php composer serve` para iniciar el servidor con el código fuente de la API.
+
+```bash
+#!/bin/bash
+
+# Si el directorio /StoreAPI existe
+if [ -d "/StoreAPI" ]; then
+    # Si el directorio /StoreAPI est
+    if [ -z "$(ls -A /StoreAPI)" ]; then
+        cp -r /StoreAPI-bkp/. /StoreAPI;
+    fi
+
+    php artisan serve;
+fi
+```
