@@ -19,7 +19,7 @@ return new class extends Migration
             $table->bigInteger('customerId')->unsigned();
             $table->decimal('amount', 8, 2);
             $table->dateTime('paymentDateTime');
-            $table->longText('comments')->nullable();
+            $table->string('comments', 255)->nullable();
             $table->enum('status', [
                 'Creado',
                 'Pagado',

@@ -13,15 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('seasonal_sales', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('slogan');
-            $table->string('description', 255)->nullable();
-            $table->dateTime('validFromDateTime');
-            $table->dateTime('validToDateTime');
-            $table->boolean('isCanceled');
-            $table->dateTime('canceledAtDateTime')->nullable();
+            $table->string('email', 120)->unique();
+            $table->string('password', 60);
+            $table->enum('role', [
+                'Administrador'
+            ]);
         });
     }
 
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('seasonal_sales');
+        Schema::dropIfExists('users');
     }
 };
