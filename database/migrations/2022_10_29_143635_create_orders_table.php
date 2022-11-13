@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('status', [
                 'Creado',
                 'Pagado',
-                'Gestion',
+                'En Gestión',
                 'Enviado',
                 'Cancelado'
             ]);

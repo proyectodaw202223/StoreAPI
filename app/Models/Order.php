@@ -42,7 +42,7 @@ class Order extends Model
     public static function findPaidOrdersByCustomerId(int $customerId): array {
         $orders = DB::table('orders')
             ->where('customerId', '=', $customerId)
-            ->where('status', '=', OrderStatus::Pagado->name)
+            ->where('status', '=', OrderStatus::PAID->name)
             ->get();
 
         return Order::hydrate($orders->toArray())->all();
