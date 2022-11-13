@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->bigInteger('productId')->unsigned();
-            $table->string('color');
+            $table->string('color', 7);
             $table->integer('stock');
             $table->enum('size', [
                 'S',
