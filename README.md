@@ -1,6 +1,6 @@
 ## Configurar Contenedor de Desarrollo
 
-La pila multicontenedor de desarrollo consiste en un contenedor de mysql, uno de phpmyadmin y uno de ubuntu con laravel instalado que se contruye con un Dockerfile. Para montar la pila pon los siguientes archivos en un directorio y ejecuta `docker-compose up -d`.
+La pila multicontenedor de desarrollo consiste en un contenedor de mysql, uno de phpmyadmin y uno de ubuntu con laravel instalado que se contruye con un Dockerfile. Para montar la pila pon los siguientes archivos en un directorio y ejecuta `docker-compose up -d`. El proyecto Laravel se habrá creado en el subdirectorio `/StoreAPI`, es posible que tengas que darte permisos para ejecutar comandos de git para ello ejecuta `sudo chown --recursive <user>:<group> <path>` en linux.
 
 ### docker-compose.yml
 
