@@ -59,6 +59,8 @@ FROM ubuntu:22.04
 # Copy entrypoint script to /
 COPY ./docker-entrypoint.sh /
 
+RUN chmod +x /docker-entrypoint.sh
+
 RUN apt update
 
 # Install git, php and laravel dependencies
