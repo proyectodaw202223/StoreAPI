@@ -41,9 +41,10 @@ services:
     build: .
     container_name: proyecto-daw-store-api
     restart: unless-stopped
+    ports:
+      - 8003:8000
     volumes:
       - ./StoreAPI:/StoreAPI
-    network_mode: host
     depends_on:
       - mysql
 
@@ -115,6 +116,6 @@ if [ -d "/StoreAPI" ]; then
         cp -r /StoreAPI-bkp/. /StoreAPI;
     fi
 
-    php artisan serve;
+    php artisan serve --host 0.0.0.0;
 fi
 ```
