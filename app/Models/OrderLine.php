@@ -140,17 +140,19 @@ class OrderLine extends Model
         return OrderLine::hydrate($orderLines->toArray())->all();
     }
 
-    public static function appendItemToOrderLinesArray(array $orderLines): array {
+    public static function appendItemToOrderLinesArray(array $orderLines, string $saleDateTime): array {
         foreach ($orderLines as $orderLine) {
-            $orderLine->appendItem();
+            $orderLine->appendItem($saleDateTime);
         }
 
         return $orderLines;
     }
 
-    public function appendItem(): void {
+    public function appendItem(string $saleDateTime): void {
         $productItem = ProductItem::findById($this->itemId);
         $productItem->appendProduct();
+        $productItem->appendSale($saleDateTime);
+        
         $this->productItem = $productItem;
     }
 }

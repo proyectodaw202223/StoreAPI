@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,7 +79,7 @@ Route::group([
         Route::get(
             '',
             'getAll'
-        )->name('getAllOrder');
+        )->name('getAllOrders');
 
         Route::get(
             '/status/{status}',
@@ -99,4 +100,44 @@ Route::group([
             '/{order}',
             'delete'
         )->name('deleteOrder');
+});
+
+Route::group([
+    "prefix" => "product",
+    "controller" => ProductController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getProductById');
+
+        Route::get(
+            '',
+            'getAll'
+        )->name('getAllProducts');
+
+        Route::get(
+            'new/{limit}',
+            'getNew'
+        )->name('getNewProducts');
+
+        Route::get(
+            'sale/{limit}',
+            'getForSale'
+        )->name('geProductsForSale');
+
+        Route::post(
+            '',
+            'create'
+        )->name('createProduct');
+
+        Route::put(
+            '/{product}',
+            'update'
+        )->name('updateProduct');
+
+        Route::delete(
+            '/{product}',
+            'delete'
+        )->name('deleteProduct');
 });

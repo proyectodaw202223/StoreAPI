@@ -161,7 +161,7 @@ class Order extends Model
 
     public function appendOrderLines(): void {
         $orderLines = OrderLine::findOrderLinesByOrderId($this->id);
-        $orderLines = OrderLine::appendItemToOrderLinesArray($orderLines);
+        $orderLines = OrderLine::appendItemToOrderLinesArray($orderLines, $this->paymentDateTime);
         $this->lines = $orderLines;
     }
 
