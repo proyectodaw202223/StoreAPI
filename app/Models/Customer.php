@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+
+use Exception;
+
 use App\Exceptions\CustomerAlreadyExistsException;
 use App\Exceptions\InvalidUpdateException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\RestrictedDeletionException;
 use App\Exceptions\UnexpectedErrorException;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class Customer extends Model
 {
@@ -22,9 +25,9 @@ class Customer extends Model
      */
     protected $guarded = [];
 
-    public static function createCustomer(Request $request): Customer {
-        self::validateCreateRequest($request);
-        $customer = Customer::create($request->all());
+    public static function createCustomer(array $customerData): Customer {
+        self::validateCustomerDataForCreation($customerData);
+        $customer = Customer::create($customerData);
         
         if (!$customer)
             throw new UnexpectedErrorException();
@@ -34,10 +37,8 @@ class Customer extends Model
         return $customer;
     }
 
-    public static function validateCreateRequest(Request $request): void {
-        $requestData = $request->all();
-
-        self::validateIfCustomerAlreadyExists($requestData);
+    public static function validateCustomerDataForCreation(array $customerData): void {
+        self::validateIfCustomerAlreadyExists($customerData);
     }
 
     private static function validateIfCustomerAlreadyExists(array $customerData): void {
@@ -63,33 +64,44 @@ class Customer extends Model
         $this->password = "";
     }
 
-    public static function updateCustomer(Request $request, Customer $customer) {
-        $requestData = $request->all();
-        $requestData = self::getRequestDataWithOriginalPasswordIfEmpty(
-            $requestData, $customer->password);
+    public static function updateCustomer(array $customerData, Customer $customer) {
+        $customerData = self::getCustomerDataWithOriginalPasswordIfEmpty(
+            $customerData, $customer->password);
         
-        self::validateInmutableFieldsDidNotChange($requestData, $customer);
-        $customer->update($requestData);
+        self::validateCustomerDataForUpdate($customerData, $customer);
+        $customer->update($customerData);
         $customer->emptyPasswordForDataProtection();
 
         return $customer;
     }
 
-    private static function getRequestDataWithOriginalPasswordIfEmpty(
-        array $requestData, string $originalPassword): array {
+    private static function getCustomerDataWithOriginalPasswordIfEmpty(
+        array $customerData, string $originalPassword): array {
         
-        if (key_exists('password', $requestData) && $requestData['password'] == "") {
-            $requestData['password'] = $originalPassword;
+        if (key_exists('password', $customerData) && $customerData['password'] == "") {
+            $customerData['password'] = $originalPassword;
         }
 
-        return $requestData;
+        return $customerData;
+    }
+
+    public static function validateCustomerDataForUpdate(array $customerData, Customer $customer) {
+        self::validateInmutableFieldsDidNotChange($customerData, $customer);
     }
 
     private static function validateInmutableFieldsDidNotChange(
-        array $requestData, Customer $customer): void {
+        array $customerData, Customer $customer): void {
 
-        if (key_exists('email', $requestData) && $requestData['email'] !== $customer->email) {
+        if (key_exists('email', $customerData) && $customerData['email'] !== $customer->email) {
             throw new InvalidUpdateException();
+        }
+    }
+
+    public static function deleteCustomer(Customer $customer): void {
+        try {
+            $customer->delete();
+        } catch (Exception $e) {
+            throw new RestrictedDeletionException();
         }
     }
 
@@ -105,12 +117,20 @@ class Customer extends Model
         return $customer;
     }
 
+    public static function findById(int $id): Customer {
+        $customer = DB::table('customers')->find($id);
+        $customer = Customer::hydrate([$customer])[0];
+        $customer->emptyPasswordForDataProtection();
+
+        return $customer;
+    }
+
     public static function findByEmailAndPasswordOrFail(
         string $email, string $password): Customer {
 
         $customer = DB::table('customers')
-            ->where('email', $email)
-            ->where('password', $password)
+            ->where('email', '=', $email)
+            ->where('password', '=', $password)
             ->first();
 
         if (!$customer)
@@ -128,8 +148,23 @@ class Customer extends Model
     }
 
     public function appendPaidOrders(): void {
-        $activeOrders = Order::findPaidOrdersByCustomerId($this->id);
-        $activeOrders = Order::appendOrderLinesToOrdersArray($activeOrders);
-        $this->orders = $activeOrders;
+        $paidOrders = Order::findPaidOrdersByCustomerId($this->id);
+
+        if (count($paidOrders) > 0)
+            $paidOrders = Order::appendOrderLinesToOrdersArray($paidOrders);
+
+        $this->orders = $paidOrders;
+    }
+
+    public function appendCreatedOrder(): void {
+        $orders = [];
+        $order = Order::findCreatedOrderByCustomerId($this->id);
+        
+        if ($order->id) {
+            $order->appendOrderLines();
+            array_push($orders, $order);
+        }
+
+        $this->orders = $orders;
     }
 }

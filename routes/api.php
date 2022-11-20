@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,37 +21,82 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get(
-    'customer/{id}',
-    [CustomerController::class, 'getById']
-)->name('getCustomerById');
+Route::group([
+    "prefix" => "customer",
+    "controller" => CustomerController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getCustomerById');
+        
+        Route::get(
+            '/credentials/{email}/{password}',
+            'getByEmailAndPassword'
+        )->name('getCustomerByEmailAndPassword');
+        
+        Route::get(
+            '/{id}/orders',
+            'getCustomerAndOrdersByCustomerId'
+        )->name('getCustomerAndOrdersByCustomerId');
+        
+        Route::get(
+            '/{id}/paid-orders',
+            'getCustomerAndPaidOrdersByCustomerId'
+        )->name('getCustomerAndPaidOrdersByCustomerId');
 
-Route::get(
-    'customer/credentials/{email}/{password}',
-    [CustomerController::class, 'getByEmailAndPassword']
-)->name('getCustomerByEmailAndPassword');
+        Route::get(
+            '/{id}/created-order',
+            'getCustomerAndCreatedOrderByCustomerId'
+        )->name('getCustomerAndCreatedOrderByCustomerId');
+        
+        Route::post(
+            '',
+            'create'
+        )->name('createCustomer');
+        
+        Route::put(
+            '/{customer}',
+            'update'
+        )->name('updateCustomer');
+        
+        Route::delete(
+            '/{customer}',
+            'delete'
+        )->name('deleteCustomer');
+});
 
-Route::get(
-    'customer/{id}/orders',
-    [CustomerController::class, 'getCustomerAndOrdersByCustomerId']
-)->name('getCustomerAndOrdersByCustomerId');
+Route::group([
+    "prefix" => "order",
+    "controller" => OrderController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getOrderById');
 
-Route::get(
-    'customer/{id}/paid-orders',
-    [CustomerController::class, 'getCustomerAndPaidOrdersByCustomerId']
-)->name('getCustomerAndPaidOrdersByCustomerId');
+        Route::get(
+            '',
+            'getAll'
+        )->name('getAllOrder');
 
-Route::post(
-    'customer',
-    [CustomerController::class, 'create']
-)->name('createCustomer');
+        Route::get(
+            '/status/{status}',
+            'getByStatus'
+        )->name('getOrdersByStatus');
 
-Route::put(
-    'customer/{customer}',
-    [CustomerController::class, 'update']
-)->name('updateCustomer');
+        Route::post(
+            '',
+            'create'
+        )->name('createOrder');
 
-Route::delete(
-    'customer/{customer}',
-    [CustomerController::class, 'delete']
-)->name('deleteCustomer');
+        Route::put(
+            '/{order}',
+            'update'
+        )->name('updateOrder');
+
+        Route::delete(
+            '/{order}',
+            'delete'
+        )->name('deleteOrder');
+});
