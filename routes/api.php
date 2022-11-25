@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductItemController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,4 +141,29 @@ Route::group([
             '/{product}',
             'delete'
         )->name('deleteProduct');
+});
+
+Route::group([
+    "prefix" => "item",
+    "controller" => ProductItemController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getItemById');
+
+        Route::post(
+            '',
+            'create'
+        )->name('createItem');
+
+        Route::put(
+            '/{item}',
+            'update'
+        )->name('updateItem');
+
+        Route::delete(
+            '/{item}',
+            'delete'
+        )->name('deleteItem');
 });
