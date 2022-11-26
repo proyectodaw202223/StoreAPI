@@ -95,7 +95,8 @@ class Product extends Model
     }
 
     private static function validateRequiredDataIsSetOnUpdate(array $productData): void {
-        if (!isset($productData['name']) ||
+        if (!isset($productData['id']) ||
+            !isset($productData['name']) ||
             !isset($productData['price']) ||
             !isset($productData['category']) ||
             !isset($productData['description']) ||

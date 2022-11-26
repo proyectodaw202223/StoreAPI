@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -166,4 +167,34 @@ Route::group([
             '/{item}',
             'delete'
         )->name('deleteItem');
+});
+
+Route::group([
+    "prefix" => "user",
+    "controller" => UserController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getUserById');
+
+        Route::get(
+            '/{email}/{password}',
+            'getByEmailAndPassword'
+        )->name('getUserByEmailAndPassword');
+
+        Route::post(
+            '',
+            'create'
+        )->name('createUser');
+
+        Route::put(
+            '/{user}',
+            'update'
+        )->name('updateUser');
+
+        Route::delete(
+            '/{user}',
+            'delete'
+        )->name('deleteUser');
 });

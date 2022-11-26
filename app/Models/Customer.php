@@ -85,9 +85,7 @@ class Customer extends Model
 
     public static function updateCustomer(array $customerData, Customer $customer) {
         $customerData = self::unsetOrdersFromCustomerData($customerData);
-        $customerData = self::getCustomerDataWithOriginalPasswordIfEmpty(
-            $customerData, $customer->password);
-        
+        $customerData = self::getCustomerDataWithOriginalPasswordIfEmpty($customerData, $customer);
         self::validateCustomerDataOnUpdate($customerData, $customer);
         $customer->update($customerData);
         $customer->emptyPasswordForDataProtection();
@@ -96,10 +94,10 @@ class Customer extends Model
     }
 
     private static function getCustomerDataWithOriginalPasswordIfEmpty(
-        array $customerData, string $originalPassword): array {
+        array $customerData, Customer $originalCustomer): array {
         
         if (key_exists('password', $customerData) && $customerData['password'] == "") {
-            $customerData['password'] = $originalPassword;
+            $customerData['password'] = $originalCustomer->password;
         }
 
         return $customerData;

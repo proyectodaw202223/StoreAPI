@@ -108,7 +108,8 @@ class ProductItem extends Model
     }
 
     private static function validateRequiredDataIsSetOnUpdate(array $itemData): void {
-        if (!isset($itemData['productId']) ||
+        if (!isset($itemData['id']) ||
+            !isset($itemData['productId']) ||
             !isset($itemData['color']) ||
             !isset($itemData['size']) ||
             !isset($itemData['updated_at'])) {
