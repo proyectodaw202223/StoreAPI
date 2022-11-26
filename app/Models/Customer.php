@@ -6,13 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+use DateTime;
 use Exception;
 
-use App\Exceptions\CustomerAlreadyExistsException;
 use App\Exceptions\InvalidUpdateException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\ResourceAlreadyExistsException;
 use App\Exceptions\RestrictedDeletionException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Exceptions\UpdateConflictException;
 
 class Customer extends Model
 {
@@ -26,7 +28,8 @@ class Customer extends Model
     protected $guarded = [];
 
     public static function createCustomer(array $customerData): Customer {
-        self::validateCustomerDataForCreation($customerData);
+        $customerData = self::unsetOrdersFromCustomerData($customerData);
+        self::validateCustomerDataOnCreate($customerData);
         $customer = Customer::create($customerData);
         
         if (!$customer)
@@ -37,15 +40,31 @@ class Customer extends Model
         return $customer;
     }
 
-    public static function validateCustomerDataForCreation(array $customerData): void {
-        self::validateIfCustomerAlreadyExists($customerData);
+    private static function unsetOrdersFromCustomerData(array $customerData): array {
+        if (isset($customerData['orders']))
+            unset($customerData['orders']);
+
+        return $customerData;
     }
 
-    private static function validateIfCustomerAlreadyExists(array $customerData): void {
+    public static function validateCustomerDataOnCreate(array $customerData): void {
+        self::validateRequiredDataIsSetOnCreate($customerData);
+        self::validateIfCustomerAlreadyExistsOnCreate($customerData);
+    }
+
+    private static function validateRequiredDataIsSetOnCreate(array $customerData): void {
+        if (!isset($customerData['firstName']) ||
+            !isset($customerData['email']) ||
+            !isset($customerData['password'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateIfCustomerAlreadyExistsOnCreate(array $customerData): void {
         $customer = self::findByEmail($customerData['email']);
 
         if ($customer->id) {
-            throw new CustomerAlreadyExistsException($customer);
+            throw new ResourceAlreadyExistsException();
         }
     }
 
@@ -65,10 +84,11 @@ class Customer extends Model
     }
 
     public static function updateCustomer(array $customerData, Customer $customer) {
+        $customerData = self::unsetOrdersFromCustomerData($customerData);
         $customerData = self::getCustomerDataWithOriginalPasswordIfEmpty(
             $customerData, $customer->password);
         
-        self::validateCustomerDataForUpdate($customerData, $customer);
+        self::validateCustomerDataOnUpdate($customerData, $customer);
         $customer->update($customerData);
         $customer->emptyPasswordForDataProtection();
 
@@ -85,14 +105,34 @@ class Customer extends Model
         return $customerData;
     }
 
-    public static function validateCustomerDataForUpdate(array $customerData, Customer $customer) {
+    public static function validateCustomerDataOnUpdate(array $customerData, Customer $customer) {
+        self::validateRequiredDataIsSetOnUpdate($customerData);
+        self::validateUpdateConflict($customerData, $customer);
         self::validateInmutableFieldsDidNotChange($customerData, $customer);
+    }
+
+    private static function validateRequiredDataIsSetOnUpdate(array $customerData): void {
+        if (!isset($customerData['firstName']) ||
+            !isset($customerData['email']) ||
+            !isset($customerData['password']) ||
+            !isset($customerData['updated_at'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateUpdateConflict(array $customerData, Customer $customer): void {
+        $currentUpdatedAt = new DateTime($customer['updated_at']);
+        $requestUpdatedAt = new DateTime($customerData['updated_at']);
+
+        if ($currentUpdatedAt > $requestUpdatedAt) {
+            throw new UpdateConflictException();
+        }
     }
 
     private static function validateInmutableFieldsDidNotChange(
         array $customerData, Customer $customer): void {
 
-        if (key_exists('email', $customerData) && $customerData['email'] !== $customer->email) {
+        if ($customerData['email'] !== $customer->email) {
             throw new InvalidUpdateException();
         }
     }

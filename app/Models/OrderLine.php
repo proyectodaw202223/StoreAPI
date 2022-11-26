@@ -6,10 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+use DateTime;
+use Exception;
+
 use App\Exceptions\UnexpectedErrorException;
 use App\Exceptions\OrderLinePriceMismatchException;
 use App\Exceptions\OrderLineAmountMismatchException;
 use App\Exceptions\OrderLineAlreadyExistsException;
+use App\Exceptions\InvalidUpdateException;
+use App\Exceptions\RestrictedDeletionException;
+use App\Exceptions\UpdateConflictException;
 
 class OrderLine extends Model
 {
@@ -44,7 +50,8 @@ class OrderLine extends Model
     }
 
     public static function createOrderLine(array $orderLineData): OrderLine {
-        self::validateOrderLineData($orderLineData);
+        $orderLineData = self::unsetProductItemFromOrderLineData($orderLineData);
+        self::validateOrderLineDataOnCreate($orderLineData);
         $orderLine = OrderLine::create($orderLineData);
 
         if (!$orderLine)
@@ -53,9 +60,27 @@ class OrderLine extends Model
         return $orderLine;
     }
 
-    public static function validateOrderLineData(array $orderLineData): void {
+    private static function unsetProductItemFromOrderLineData(array $orderLineData): array {
+        if (isset($orderLineData['productItem']))
+            unset($orderLineData['productItem']);
+
+        return $orderLineData;
+    }
+
+    public static function validateOrderLineDataOnCreate(array $orderLineData): void {
+        self::validateRequiredDataIsSetOnCreate($orderLineData);
         self::validateLinePriceMatchesItemPrice($orderLineData);
         self::validateAmountMatchesPriceSum($orderLineData);
+    }
+
+    private static function validateRequiredDataIsSetOnCreate(array $orderLineData): void {
+        if (!isset($orderLineData['orderId']) ||
+            !isset($orderLineData['itemId']) ||
+            !isset($orderLineData['quantity']) ||
+            !isset($orderLineData['priceWithDiscount']) ||
+            !isset($orderLineData['amount'])) {
+            throw new InvalidUpdateException();
+        }
     }
 
     private static function validateLinePriceMatchesItemPrice(array $orderLineData): void {
@@ -103,7 +128,8 @@ class OrderLine extends Model
     }
 
     public static function updateOrderLine(array $orderLineData): OrderLine {
-        self::validateOrderLineData($orderLineData);
+        $orderLineData = self::unsetProductItemFromOrderLineData($orderLineData);
+        self::validateOrderLineDataOnUpdate($orderLineData);
         
         $orderLine = self::findById($orderLineData['id']);
         $orderLine->update($orderLineData);
@@ -114,16 +140,50 @@ class OrderLine extends Model
         return $orderLine;
     }
 
+    public static function validateOrderLineDataOnUpdate(array $orderLineData): void {
+        self::validateRequiredDataIsSetOnUpdate($orderLineData);
+        self::validateUpdateConflict($orderLineData);
+        self::validateLinePriceMatchesItemPrice($orderLineData);
+        self::validateAmountMatchesPriceSum($orderLineData);
+    }
+
+    private static function validateRequiredDataIsSetOnUpdate(array $orderLineData): void {
+        if (!isset($orderLineData['id']) ||
+            !isset($orderLineData['orderId']) ||
+            !isset($orderLineData['itemId']) ||
+            !isset($orderLineData['quantity']) ||
+            !isset($orderLineData['priceWithDiscount']) ||
+            !isset($orderLineData['amount']) ||
+            !isset($orderLineData['updated_at'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateUpdateConflict(array $orderLineData): void {
+        $orderLine = self::findById($orderLineData['id']);
+
+        $currentUpdatedAt = new DateTime($orderLine['updated_at']);
+        $requestUpdatedAt = new DateTime($orderLineData['updated_at']);
+
+        if ($currentUpdatedAt > $requestUpdatedAt) {
+            throw new UpdateConflictException();
+        }
+    }
+
     private static function deleteOrderLinesWhereNotIn(array $lines, int $orderId): void {
         $lineIds = [];
 
         foreach ($lines as $line)
             array_push($lineIds, $line->id);
 
-        DB::table('order_lines')
-            ->where('orderId', '=', $orderId)
-            ->whereNotIn('id', $lineIds)
-            ->delete();
+        try {
+            DB::table('order_lines')
+                ->where('orderId', '=', $orderId)
+                ->whereNotIn('id', $lineIds)
+                ->delete();
+        } catch (Exception $e) {
+            throw new RestrictedDeletionException();
+        }
     }
 
     public static function findById(int $id): OrderLine {

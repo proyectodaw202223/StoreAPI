@@ -6,11 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+use DateTime;
 use Exception;
 
 use App\Exceptions\NotFoundException;
 use App\Exceptions\RestrictedDeletionException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Exceptions\InvalidUpdateException;
+use App\Exceptions\ResourceAlreadyExistsException;
+use App\Exceptions\UpdateConflictException;
 
 class Product extends Model
 {
@@ -24,7 +28,9 @@ class Product extends Model
     protected $guarded = [];
 
     public static function createProduct(array $productData): Product {
-        $productData = self::removeExtraData($productData);
+        $productData = self::unsetItemsFromProductData($productData);
+        self::validateProductDataOnCreate($productData);
+
         $product = Product::create($productData);
 
         if (!$product)
@@ -33,22 +39,86 @@ class Product extends Model
         return $product;
     }
 
-    private static function removeExtraData(array $productData): array {
-        if (isset($productData['items'])) {
-            unset($productData['items']);
-        }
+    private static function unsetItemsFromProductData(array $productData): array {
+        if (isset($productData['productItems']))
+            unset($productData['productItems']);
 
         return $productData;
     }
 
+    public static function validateProductDataOnCreate(array $productData): void {
+        self::validateRequiredDataIsSetOnCreate($productData);
+        self::validateIfProductAlreadyExistsOnCreate($productData);
+    }
+
+    private static function validateRequiredDataIsSetOnCreate(array $productData): void {
+        if (!isset($productData['name']) ||
+            !isset($productData['price']) ||
+            !isset($productData['category']) ||
+            !isset($productData['description'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateIfProductAlreadyExistsOnCreate(array $productData): void {
+        $product = self::findByName($productData['name']);
+
+        if ($product->id) {
+            throw new ResourceAlreadyExistsException();
+        }
+    }
+
+    public static function findByName(string $name): Product {
+        $product = DB::table('products')
+            ->where('name', '=', $name)
+            ->first();
+
+        return Product::hydrate([$product])[0];
+    }
+
     public static function updateProduct(array $productData, Product $product): Product {
         $productData = self::removeExtraData($productData);
+        self::validateProductDataOnUpdate($productData, $product);
+
         $product->update($productData);
 
         if (!$product)
             throw new UnexpectedErrorException();
 
         return $product;
+    }
+
+    public static function validateProductDataOnUpdate(array $productData, Product $product): void {
+        self::validateRequiredDataIsSetOnUpdate($productData);
+        self::validateUpdateConflict($productData, $product);
+        self::validateIfProductAlreadyExistsOnUpdate($productData);
+    }
+
+    private static function validateRequiredDataIsSetOnUpdate(array $productData): void {
+        if (!isset($productData['name']) ||
+            !isset($productData['price']) ||
+            !isset($productData['category']) ||
+            !isset($productData['description']) ||
+            !isset($productData['updated_at'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateUpdateConflict(array $productData, Product $product): void {
+        $currentUpdatedAt = new DateTime($product['updated_at']);
+        $requestUpdatedAt = new DateTime($productData['updated_at']);
+
+        if ($currentUpdatedAt > $requestUpdatedAt) {
+            throw new UpdateConflictException();
+        }
+    }
+
+    private static function validateIfProductAlreadyExistsOnUpdate(array $productData): void {
+        $product = self::findByName($productData['name']);
+
+        if ($product->id && $product->id != $productData['id']) {
+            throw new ResourceAlreadyExistsException();
+        }
     }
 
     public static function deleteProduct(Product $product): void {
@@ -159,6 +229,6 @@ class Product extends Model
         $items = ProductItem::appendImagesToItemsArray($items);
         $items = ProductItem::appendSaleToItemsArray($items, date('Y-m-d H:i:s'));
 
-        $this->items = $items;
+        $this->productItems = $items;
     }
 }

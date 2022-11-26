@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+use DateTime;
 use Exception;
 
 use App\Enums\OrderStatus;
@@ -13,6 +14,8 @@ use App\Exceptions\NotFoundException;
 use App\Exceptions\OrderAmountMismatchException;
 use App\Exceptions\RestrictedDeletionException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Exceptions\InvalidUpdateException;
+use App\Exceptions\UpdateConflictException;
 
 class Order extends Model
 {
@@ -27,17 +30,14 @@ class Order extends Model
 
     public static function createOrder(array $orderData): Order {
         DB::beginTransaction();
-        self::validateOrderData($orderData);
+        $orderData = self::unsetCustomerFromOrderData($orderData);
 
-        if (key_exists('lines', $orderData)) {
+        if (isset($orderData['lines'])) {
             $orderLinesData = $orderData['lines'];
             unset($orderData['lines']);
         }
 
-        if (key_exists('customer', $orderData)) {
-            unset($orderData['customer']);
-        }
-        
+        self::validateOrderDataOnCreate($orderData);
         $order = Order::create($orderData);
 
         if (!$order)
@@ -49,8 +49,25 @@ class Order extends Model
         return $order;
     }
 
-    public static function validateOrderData(array $orderData): void {
+    private static function unsetCustomerFromOrderData(array $orderData): array {
+        if (isset($orderData['customer']))
+            unset($orderData['customer']);
+
+        return $orderData;
+    }
+
+    public static function validateOrderDataOnCreate(array $orderData): void {
+        self::validateRequiredDataIsSetOnCreate($orderData);
         self::validateOrderAmountMatchesLineAmounts($orderData);
+    }
+
+    private static function validateRequiredDataIsSetOnCreate(array $orderData): void {
+        if (!isset($orderData['customerId']) ||
+            !isset($orderData['amount']) ||
+            !isset($orderData['paymentDateTime']) ||
+            !isset($orderData['status'])) {
+            throw new InvalidUpdateException();
+        }
     }
 
     private static function validateOrderAmountMatchesLineAmounts(array $orderData): void {
@@ -60,23 +77,21 @@ class Order extends Model
             $linesAmount += $line['amount'];
         }
 
-        if ($linesAmount != $orderData['amount'])
+        if ($linesAmount != $orderData['amount']) {
             throw new OrderAmountMismatchException($orderData['amount'], $linesAmount);
+        }
     }
 
     public static function updateOrder(array $orderData, Order $order): Order {
         DB::beginTransaction();
-        self::validateOrderData($orderData);
-
-        if (key_exists('lines', $orderData)) {
+        $orderData = self::unsetCustomerFromOrderData($orderData);
+        
+        if (isset($orderData['lines'])) {
             $orderLinesData = $orderData['lines'];
             unset($orderData['lines']);
         }
 
-        if (key_exists('customer', $orderData)) {
-            unset($orderData['customer']);
-        }
-
+        self::validateOrderDataOnUpdate($orderData, $order);
         $order->update($orderData);
 
         if (!$order)
@@ -86,6 +101,31 @@ class Order extends Model
         DB::commit();
 
         return $order;
+    }
+
+    public static function validateOrderDataOnUpdate(array $orderData, Order $order): void {
+        self::validateRequiredDataIsSetOnUpdate($orderData);
+        self::validateUpdateConflict($orderData, $order);
+        self::validateOrderAmountMatchesLineAmounts($orderData);
+    }
+
+    private static function validateRequiredDataIsSetOnUpdate(array $orderData): void {
+        if (!isset($orderData['customerId']) ||
+            !isset($orderData['amount']) ||
+            !isset($orderData['paymentDateTime']) ||
+            !isset($orderData['status']) ||
+            !isset($orderData['updated_at'])) {
+            throw new InvalidUpdateException();
+        }
+    }
+
+    private static function validateUpdateConflict(array $orderData, Order $order): void {
+        $currentUpdatedAt = new DateTime($order['updated_at']);
+        $requestUpdatedAt = new DateTime($orderData['updated_at']);
+
+        if ($currentUpdatedAt > $requestUpdatedAt) {
+            throw new UpdateConflictException();
+        }
     }
 
     public static function deleteOrder(Order $order): void {

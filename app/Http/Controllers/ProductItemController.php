@@ -26,6 +26,8 @@ class ProductItemController extends Controller
 
     private function getItemById(int $id): JsonResponse {
         $item = ProductItem::findByIdOrFail($id);
+        $item->appendProduct();
+        $item->appendImages();
 
         return parent::createJsonResponse($item, Response::HTTP_OK);
     }
@@ -44,6 +46,8 @@ class ProductItemController extends Controller
     private function createItem(Request $request): JsonResponse {
         $requestData = $request->all();
         $item = ProductItem::createItem($requestData);
+        $item->appendProduct();
+        $item->appendImages();
 
         return parent::createJsonResponse($item, Response::HTTP_OK);
     }
@@ -61,6 +65,8 @@ class ProductItemController extends Controller
     private function updateItem(Request $request, ProductItem $item): JsonResponse {
         $requestData = $request->all();
         $item = ProductItem::updateItem($requestData, $item);
+        $item->appendProduct();
+        $item->appendImages();
 
         return parent::createJsonResponse($item, Response::HTTP_OK);
     }
