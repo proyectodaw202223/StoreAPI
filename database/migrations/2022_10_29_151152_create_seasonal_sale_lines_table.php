@@ -22,6 +22,8 @@ return new class extends Migration
 
             $table->foreign('seasonalSaleId')->references('id')->on('seasonal_sales');
             $table->foreign('itemId')->references('id')->on('product_items');
+
+            $table->unique(['seasonalSaleId', 'itemId'], 'UX_seasonalSaleLines_seasonalSaleId_itemId');
         });
     }
 

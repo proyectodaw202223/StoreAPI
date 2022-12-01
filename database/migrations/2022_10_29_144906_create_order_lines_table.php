@@ -24,6 +24,8 @@ return new class extends Migration
 
             $table->foreign('orderId')->references('id')->on('orders');
             $table->foreign('itemId')->references('id')->on('product_items');
+
+            $table->unique(['orderId', 'itemId'], 'UX_orderLines_orderId_itemId');
         });
     }
 
