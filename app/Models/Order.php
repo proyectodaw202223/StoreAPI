@@ -40,10 +40,9 @@ class Order extends Model
         self::validateOrderDataOnCreate($orderData);
         $order = Order::create($orderData);
 
-        if (!$order)
-            throw new UnexpectedErrorException();
-
-        $order->lines = OrderLine::createOrderLinesFromArray($orderLinesData, $order->id);
+        if (isset($orderLinesData))
+            $order->lines = OrderLine::createOrderLinesFromArray($orderLinesData, $order->id);
+            
         DB::commit();
 
         return $order;
@@ -94,10 +93,13 @@ class Order extends Model
         self::validateOrderDataOnUpdate($orderData, $order);
         $order->update($orderData);
 
-        if (!$order)
-            throw new UnexpectedErrorException();
+        if (isset($orderLinesData)) {
+            $order->lines = OrderLine::updateOrderLinesFromArray($orderLinesData, $order->id);
+        } else {
+            OrderLine::deleteOrderLinesWhereNotIn([], $order->id);
+            $order->lines = [];
+        }
 
-        $order->lines = OrderLine::updateOrderLinesFromArray($orderLinesData, $order->id);
         DB::commit();
 
         return $order;

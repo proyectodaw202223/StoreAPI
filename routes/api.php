@@ -8,6 +8,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SeasonalSaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -197,4 +198,34 @@ Route::group([
             '/{user}',
             'delete'
         )->name('deleteUser');
+});
+
+Route::group([
+    "prefix" => "sale",
+    "controller" => SeasonalSaleController::class],
+    function() {
+        Route::get(
+            '/{id}',
+            'getById'
+        )->name('getSaleById');
+
+        Route::get(
+            '',
+            'getAll'
+        )->name('getAllSales');
+
+        Route::post(
+            '',
+            'create'
+        )->name('createSale');
+
+        Route::put(
+            '/{sale}',
+            'update'
+        )->name('updateSale');
+
+        Route::delete(
+            '/{sale}',
+            'delete'
+        )->name('deleteSale');
 });

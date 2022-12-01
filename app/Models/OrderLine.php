@@ -12,10 +12,10 @@ use Exception;
 use App\Exceptions\UnexpectedErrorException;
 use App\Exceptions\OrderLinePriceMismatchException;
 use App\Exceptions\OrderLineAmountMismatchException;
-use App\Exceptions\OrderLineAlreadyExistsException;
 use App\Exceptions\InvalidUpdateException;
 use App\Exceptions\RestrictedDeletionException;
 use App\Exceptions\UpdateConflictException;
+use App\Exceptions\ResourceAlreadyExistsException;
 
 class OrderLine extends Model
 {
@@ -36,7 +36,7 @@ class OrderLine extends Model
 
         foreach ($orderLinesData as $lineData) {
             if (array_search($lineData['itemId'], $orderItems) !== false)
-                throw OrderLineAlreadyExistsException::makeNewFromArray($lineData);
+                throw new ResourceAlreadyExistsException();
 
             $lineData['orderId'] = $orderId;
             $orderLine = self::createOrderLine($lineData);
@@ -50,17 +50,14 @@ class OrderLine extends Model
     }
 
     public static function createOrderLine(array $orderLineData): OrderLine {
-        $orderLineData = self::unsetProductItemFromOrderLineData($orderLineData);
+        $orderLineData = self::unsetItemFromOrderLineData($orderLineData);
         self::validateOrderLineDataOnCreate($orderLineData);
         $orderLine = OrderLine::create($orderLineData);
-
-        if (!$orderLine)
-            throw new UnexpectedErrorException();
         
         return $orderLine;
     }
 
-    private static function unsetProductItemFromOrderLineData(array $orderLineData): array {
+    private static function unsetItemFromOrderLineData(array $orderLineData): array {
         if (isset($orderLineData['productItem']))
             unset($orderLineData['productItem']);
 
@@ -111,7 +108,7 @@ class OrderLine extends Model
 
         foreach ($orderLinesToUpdate as $lineToUpdate) {
             if (array_search($lineToUpdate['itemId'], $orderItems) !== false)
-                throw OrderLineAlreadyExistsException::makeNewFromArray($lineToUpdate);
+                throw new ResourceAlreadyExistsException();
 
             if (isset($lineToUpdate['id']))
                 $orderLine = self::updateOrderLine($lineToUpdate);
@@ -128,21 +125,19 @@ class OrderLine extends Model
     }
 
     public static function updateOrderLine(array $orderLineData): OrderLine {
-        $orderLineData = self::unsetProductItemFromOrderLineData($orderLineData);
-        self::validateOrderLineDataOnUpdate($orderLineData);
-        
         $orderLine = self::findById($orderLineData['id']);
-        $orderLine->update($orderLineData);
 
-        if (!$orderLine)
-            throw new UnexpectedErrorException();
+        $orderLineData = self::unsetItemFromOrderLineData($orderLineData);
+        self::validateOrderLineDataOnUpdate($orderLineData, $orderLine);
+        $orderLine->update($orderLineData);
 
         return $orderLine;
     }
 
-    public static function validateOrderLineDataOnUpdate(array $orderLineData): void {
+    public static function validateOrderLineDataOnUpdate(
+        array $orderLineData, OrderLine $orderLine): void {
         self::validateRequiredDataIsSetOnUpdate($orderLineData);
-        self::validateUpdateConflict($orderLineData);
+        self::validateUpdateConflict($orderLineData, $orderLine);
         self::validateLinePriceMatchesItemPrice($orderLineData);
         self::validateAmountMatchesPriceSum($orderLineData);
     }
@@ -159,9 +154,8 @@ class OrderLine extends Model
         }
     }
 
-    private static function validateUpdateConflict(array $orderLineData): void {
-        $orderLine = self::findById($orderLineData['id']);
-
+    private static function validateUpdateConflict(
+        array $orderLineData, OrderLine $orderLine): void {
         $currentUpdatedAt = new DateTime($orderLine['updated_at']);
         $requestUpdatedAt = new DateTime($orderLineData['updated_at']);
 
@@ -170,7 +164,7 @@ class OrderLine extends Model
         }
     }
 
-    private static function deleteOrderLinesWhereNotIn(array $lines, int $orderId): void {
+    public static function deleteOrderLinesWhereNotIn(array $lines, int $orderId): void {
         $lineIds = [];
 
         foreach ($lines as $line)
