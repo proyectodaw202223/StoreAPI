@@ -23,7 +23,7 @@ return new class extends Migration
                 'S',
                 'M',
                 'L',
-                'ONE_SIZE'
+                'Única'
             ]);
 
             $table->foreign('productId')->references('id')->on('products');
