@@ -17,10 +17,14 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('firstName', 60);
-            $table->string('lastName', 60);
+            $table->string('lastName', 60)->nullable();
             $table->string('email', 120)->unique();
             $table->string('password', 60);
-            $table->string('address', 255);
+            $table->string('country', 60)->nullable();
+            $table->string('province', 60)->nullable();
+            $table->string('city', 60)->nullable();
+            $table->string('zipCode', 10)->nullable();
+            $table->string('streetAddress', 120)->nullable();
             $table->string('phoneNumber', 15)->nullable();
         });
     }

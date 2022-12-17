@@ -22,10 +22,13 @@ return new class extends Migration
             $table->enum('size', [
                 'S',
                 'M',
-                'L'
+                'L',
+                'Única'
             ]);
 
             $table->foreign('productId')->references('id')->on('products');
+
+            $table->unique(['productId', 'color', 'size'], 'UX_productItems_prodId_color_size');
         });
     }
 
