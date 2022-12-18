@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamps();
             $table->bigInteger('itemId')->unsigned();
             $table->string('imagePath', 255);
+            $table->string('url', 255);
 
             $table->foreign('itemId')->references('id')->on('product_items');
         });

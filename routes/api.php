@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SeasonalSaleController;
+use App\Http\Controllers\ProductItemImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,7 +69,8 @@ Route::group([
             '/{customer}',
             'delete'
         )->name('deleteCustomer');
-});
+    }
+);
 
 Route::group([
     "prefix" => "order",
@@ -103,7 +105,8 @@ Route::group([
             '/{order}',
             'delete'
         )->name('deleteOrder');
-});
+    }
+);
 
 Route::group([
     "prefix" => "product",
@@ -143,7 +146,8 @@ Route::group([
             '/{product}',
             'delete'
         )->name('deleteProduct');
-});
+    }
+);
 
 Route::group([
     "prefix" => "item",
@@ -168,7 +172,8 @@ Route::group([
             '/{item}',
             'delete'
         )->name('deleteItem');
-});
+    }
+);
 
 Route::group([
     "prefix" => "user",
@@ -198,7 +203,8 @@ Route::group([
             '/{user}',
             'delete'
         )->name('deleteUser');
-});
+    }
+);
 
 Route::group([
     "prefix" => "sale",
@@ -228,4 +234,26 @@ Route::group([
             '/{sale}',
             'delete'
         )->name('deleteSale');
-});
+    }
+);
+
+Route::group([
+    "prefix" => "itemImage",
+    "controller" => ProductItemImageController::class],
+    function() {
+        Route::get(
+            '',
+            'getAll'
+        )->name('getAllItemImages');
+        
+        Route::post(
+            '',
+            'create'
+        )->name('postItemImage');
+
+        Route::delete(
+            '{id}',
+            'delete'
+        )->name('deleteItemImage');
+    }
+);
