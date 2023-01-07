@@ -77,6 +77,7 @@ class Product extends Model
     }
 
     public static function updateProduct(array $productData, Product $product): Product {
+        $productData = self::unsetItemsFromProductData($productData);
         self::validateProductDataOnUpdate($productData, $product);
 
         $product->update($productData);
