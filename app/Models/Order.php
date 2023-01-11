@@ -30,6 +30,8 @@ class Order extends Model
 
     public static function createOrder(array $orderData): Order {
         DB::beginTransaction();
+
+        self::validateOrderDataOnCreate($orderData);
         $orderData = self::unsetCustomerFromOrderData($orderData);
 
         if (isset($orderData['lines'])) {
@@ -37,7 +39,6 @@ class Order extends Model
             unset($orderData['lines']);
         }
 
-        self::validateOrderDataOnCreate($orderData);
         $order = Order::create($orderData);
 
         if (isset($orderLinesData))
@@ -71,7 +72,7 @@ class Order extends Model
 
     private static function validateOrderAmountMatchesLineAmounts(array $orderData): void {
         $linesAmount = 0;
-
+        
         foreach ($orderData['lines'] as $line) {
             $linesAmount += $line['amount'];
         }
@@ -83,14 +84,15 @@ class Order extends Model
 
     public static function updateOrder(array $orderData, Order $order): Order {
         DB::beginTransaction();
+
+        self::validateOrderDataOnUpdate($orderData, $order);
         $orderData = self::unsetCustomerFromOrderData($orderData);
         
         if (isset($orderData['lines'])) {
             $orderLinesData = $orderData['lines'];
             unset($orderData['lines']);
         }
-
-        self::validateOrderDataOnUpdate($orderData, $order);
+        
         $order->update($orderData);
 
         if (isset($orderLinesData)) {
