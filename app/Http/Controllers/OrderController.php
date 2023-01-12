@@ -98,6 +98,7 @@ class OrderController extends Controller
     private function updateOrder(Request $request, Order $order): JsonResponse {
         $requestData = $request->all();
         $order = Order::updateOrder($requestData, $order);
+        $order->appendCustomer();
 
         return parent::createJsonResponse($order, Response::HTTP_OK);
     }
