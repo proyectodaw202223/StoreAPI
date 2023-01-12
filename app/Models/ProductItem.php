@@ -161,12 +161,26 @@ class ProductItem extends Model
         return ProductItem::hydrate([$item])[0];
     }
 
+    public static function findAllItems(): array {
+        $items = DB::table('product_items')->get();
+
+        return ProductItem::hydrate($items->toArray())->all();
+    }
+
     public static function findItemsByProductId(int $productId): array {
         $items = DB::table('product_items')
             ->where('productId', '=', $productId)
             ->get();
 
         return ProductItem::hydrate($items->toArray())->all();
+    }
+
+    public static function appendProductToItemsArray(array $items): array {
+        foreach ($items as $item) {
+            $item->appendProduct();
+        }
+
+        return $items;
     }
 
     public function appendProduct(): void {
