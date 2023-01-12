@@ -86,7 +86,6 @@ class OrderController extends Controller
     }
 
     public function update(Request $request, Order $order): JsonResponse {
-        return $this->updateOrder($request, $order);
         try {
             return $this->updateOrder($request, $order);
         } catch (CustomException $e) {
