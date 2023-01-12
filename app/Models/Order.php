@@ -97,6 +97,7 @@ class Order extends Model
 
         if (isset($orderLinesData)) {
             $order->lines = OrderLine::updateOrderLinesFromArray($orderLinesData, $order->id);
+            $order->lines = Orderline::appendItemToOrderLinesArray($order->lines, $order->paymentDateTime);
         } else {
             OrderLine::deleteOrderLinesWhereNotIn([], $order->id);
             $order->lines = [];
