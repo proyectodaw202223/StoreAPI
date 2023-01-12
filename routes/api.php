@@ -158,6 +158,11 @@ Route::group([
             'getById'
         )->name('getItemById');
 
+        Route::get(
+            '/',
+            'getAll'
+        )->name('getAllItems');
+
         Route::post(
             '',
             'create'

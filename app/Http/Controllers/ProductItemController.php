@@ -32,8 +32,24 @@ class ProductItemController extends Controller
         return parent::createJsonResponse($item, Response::HTTP_OK);
     }
 
+    public function getAll(): JsonResponse {
+        try {
+            return $this->getAllItems();
+        } catch (CustomException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw new UnexpectedErrorException();
+        }
+    }
+
+    private function getAllItems(): JsonResponse {
+        $items = ProductItem::findAllItems();
+        $items = ProductItem::appendProductToItemsArray($items);
+        
+        return parent::createJsonResponse($items, Response::HTTP_OK);
+    }
+
     public function create(Request $request): JsonResponse {
-        return $this->createItem($request);
         try {
             return $this->createItem($request);
         } catch (CustomException $e) {
