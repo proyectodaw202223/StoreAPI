@@ -116,7 +116,15 @@ class SeasonalSale extends Model
 
     public static function deleteSale(SeasonalSale $sale): void {
         try {
+            DB::beginTransaction();
+            $lines = SeasonalSaleLine::findSaleLinesBySeasonalSaleId($sale->id);
+
+            foreach ($lines as $line) {
+                $line->delete();
+            }
+
             $sale->delete();
+            DB::commit();
         } catch (Exception $e) {
             throw new RestrictedDeletionException();
         }

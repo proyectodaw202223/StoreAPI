@@ -13,7 +13,6 @@ use App\Enums\OrderStatus;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\OrderAmountMismatchException;
 use App\Exceptions\RestrictedDeletionException;
-use App\Exceptions\UnexpectedErrorException;
 use App\Exceptions\InvalidUpdateException;
 use App\Exceptions\UpdateConflictException;
 
@@ -134,9 +133,25 @@ class Order extends Model
 
     public static function deleteOrder(Order $order): void {
         try {
+            self::validateDelete($order);
+
+            DB::beginTransaction();
+            $lines = OrderLine::findOrderLinesByOrderId($order->id);
+
+            foreach ($lines as $line) {
+                $line->delete();
+            }
+
             $order->delete();
+            DB::commit();
         } catch (Exception $e) {
             throw new RestrictedDeletionException();
+        }
+    }
+
+    public static function validateDelete(Order $order): void {
+        if ($order->status != OrderStatus::CREATED->value) {
+            throw new InvalidUpdateException();
         }
     }
 

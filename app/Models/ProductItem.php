@@ -146,7 +146,18 @@ class ProductItem extends Model
 
     public static function deleteItem(ProductItem $item): void {
         try {
+            DB::beginTransaction();
+
+            if (!OrderLine::existsOrderLineByItemId($item->id) && !SeasonalSaleLine::existsSaleLineByItemId($item->id)) {
+                $itemImages = ProductItemImage::findImagesByItemId($item->id);
+
+                foreach ($itemImages as $image) {
+                    $image->delete();
+                }
+            }
+
             $item->delete();
+            DB::commit();
         } catch (Exception $e) {
             throw new RestrictedDeletionException();
         }

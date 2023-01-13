@@ -194,6 +194,14 @@ class OrderLine extends Model
         return OrderLine::hydrate($orderLines->toArray())->all();
     }
 
+    public static function existsOrderLineByItemId(int $itemId): bool {
+        $orderLine = DB::table('order_lines')
+            ->where('itemId', '=', $itemId)
+            ->first();
+
+        return ($orderLine) ? true : false;
+    }
+
     public static function appendItemToOrderLinesArray(array $orderLines, string $saleDateTime): array {
         foreach ($orderLines as $orderLine) {
             $orderLine->appendItem($saleDateTime);
