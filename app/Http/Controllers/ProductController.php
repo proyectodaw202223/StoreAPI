@@ -105,6 +105,7 @@ class ProductController extends Controller
     private function createProduct(Request $request): JsonResponse {
         $requestData = $request->all();
         $product = Product::createProduct($requestData);
+        $product->appendItems();
 
         return parent::createJsonResponse($product, Response::HTTP_OK);
     }
@@ -122,6 +123,7 @@ class ProductController extends Controller
     private function updateProduct(Request $request, Product $product): JsonResponse {
         $requestData = $request->all();
         $product = Product::updateProduct($requestData, $product);
+        $product->appendItems();
 
         return parent::createJsonResponse($product, Response::HTTP_OK);
     }

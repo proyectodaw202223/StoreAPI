@@ -11,6 +11,7 @@ use Exception;
 use App\Models\SeasonalSale;
 use App\Exceptions\CustomException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Models\SeasonalSaleLine;
 
 class SeasonalSaleController extends Controller
 {
@@ -61,6 +62,7 @@ class SeasonalSaleController extends Controller
     private function createSale(Request $request): JsonResponse {
         $requestData = $request->all();
         $sale = SeasonalSale::createSale($requestData);
+        $sale->appendSaleLines();
 
         return parent::createJsonResponse($sale, Response::HTTP_OK);
     }
@@ -78,6 +80,7 @@ class SeasonalSaleController extends Controller
     private function updateSale(Request $request, SeasonalSale $sale): JsonResponse {
         $requestData = $request->all();
         $sale = SeasonalSale::updateSale($requestData, $sale);
+        $sale->appendSaleLines();
 
         return parent::createJsonResponse($sale, Response::HTTP_OK);
     }
