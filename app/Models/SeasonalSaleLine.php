@@ -194,6 +194,14 @@ class SeasonalSaleLine extends Model
         return SeasonalSaleLine::hydrate($saleLines->toArray())->all();
     }
 
+    public static function existsSaleLineByItemId(int $itemId): bool {
+        $saleLine = DB::table('seasonal_sale_lines')
+            ->where('itemId', '=', $itemId)
+            ->first();
+
+        return ($saleLine) ? true : false;
+    }
+
     public static function appendItemsToSeasonalSaleLinesArray(array $saleLines): array {
         foreach ($saleLines as $line) {
             $line->appendItem();
