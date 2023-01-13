@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
             $table->bigInteger('customerId')->unsigned();
             $table->decimal('amount', 8, 2);
-            $table->dateTime('paymentDateTime');
+            $table->dateTime('paymentDateTime')->nullable();
             $table->string('comments', 255)->nullable();
             $table->enum('status', [
                 'Creado',
