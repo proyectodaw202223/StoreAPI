@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Enums\OrderStatus;
 use App\Exceptions\CustomException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Models\OrderLine;
 
 class OrderController extends Controller
 {
@@ -82,6 +83,9 @@ class OrderController extends Controller
     private function createOrder(Request $request): JsonResponse {
         $requestData = $request->all();
         $order = Order::createOrder($requestData);
+        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $order->paymentDateTime);
+        $order->appendCustomer();
+        
         return parent::createJsonResponse($order, Response::HTTP_OK);
     }
 
@@ -98,6 +102,7 @@ class OrderController extends Controller
     private function updateOrder(Request $request, Order $order): JsonResponse {
         $requestData = $request->all();
         $order = Order::updateOrder($requestData, $order);
+        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $order->paymentDateTime);
         $order->appendCustomer();
 
         return parent::createJsonResponse($order, Response::HTTP_OK);
