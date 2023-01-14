@@ -30,9 +30,9 @@ class CustomerController extends Controller {
         return parent::createJsonResponse($customer, Response::HTTP_OK);
     }
 
-    public function getByEmailAndPassword(string $email, string $password): JsonResponse {
+    public function getByEmailAndPassword(Request $request): JsonResponse {
         try {
-            return $this->getCustomerByEmailAndPassword($email, $password);
+            return $this->getCustomerByEmailAndPassword($request);
         } catch (CustomException $e) {
             throw $e;
         } catch (Exception $e) {
@@ -40,8 +40,9 @@ class CustomerController extends Controller {
         }
     }
 
-    private function getCustomerByEmailAndPassword(string $email, string $password): JsonResponse {
-        $customer = Customer::findByEmailAndPasswordOrFail($email, $password);
+    private function getCustomerByEmailAndPassword(Request $request): JsonResponse {
+        $requestData = $request->data();
+        $customer = Customer::findByEmailAndPasswordOrFail($requestData['email'], $requestData['password']);
         
         return parent::createJsonResponse($customer, Response::HTTP_OK);
     }

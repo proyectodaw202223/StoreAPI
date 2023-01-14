@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 use DateTime;
 use Exception;
@@ -28,6 +29,7 @@ class User extends Model
 
     public static function createUser(array $userData): User {
         self::validateUserDataOnCreate($userData);
+        $userData['password'] = Hash::make($userData['password']);
         $user = User::create($userData);
         $user->emptyPasswordForDataProtection();
 
@@ -84,6 +86,8 @@ class User extends Model
         
         if (key_exists('password', $userData) && $userData['password'] == "") {
             $userData['password'] = $originalUser->password;
+        } else {
+            $userData['password'] = Hash::make($userData['password']);
         }
 
         return $userData;
@@ -143,13 +147,16 @@ class User extends Model
     public static function findByEmailAndPasswordOrFail(string $email, string $password): User {
         $user = DB::table('users')
             ->where('email', '=', $email)
-            ->where('password', '=', $password)
             ->first();
         
         if (!$user)
             throw new NotFoundException();
 
         $user = User::hydrate([$user])[0];
+
+        if (!Hash::check($password, $user->password))
+            throw new NotFoundException();
+
         $user->emptyPasswordForDataProtection();
 
         return $user;
