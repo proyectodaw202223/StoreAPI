@@ -30,9 +30,9 @@ class UserController extends Controller
         return parent::createJsonResponse($user, Response::HTTP_OK);
     }
 
-    public function getByEmailAndPassword(string $email, string $password): JsonResponse {
+    public function getByEmailAndPassword(Request $request): JsonResponse {
         try {
-            return $this->getUserByEmailAndPassword($email, $password);
+            return $this->getUserByEmailAndPassword($request);
         } catch (CustomException $e) {
             throw $e;
         } catch (Exception $e) {
@@ -40,8 +40,9 @@ class UserController extends Controller
         }
     }
 
-    private function getUserByEmailAndPassword(string $email, string $password): JsonResponse {
-        $user = User::findByEmailAndPasswordOrFail($email, $password);
+    private function getUserByEmailAndPassword(Request $request): JsonResponse {
+        $requestData = $request->all();
+        $user = User::findByEmailAndPasswordOrFail($requestData['email'], $requestData['password']);
 
         return parent::createJsonResponse($user, Response::HTTP_OK);
     }

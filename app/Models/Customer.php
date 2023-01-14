@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 use DateTime;
 use Exception;
@@ -30,6 +31,7 @@ class Customer extends Model
     public static function createCustomer(array $customerData): Customer {
         $customerData = self::unsetOrdersFromCustomerData($customerData);
         self::validateCustomerDataOnCreate($customerData);
+        $customerData['password'] = Hash::make($customerData['password']);
         $customer = Customer::create($customerData);
         
         if (!$customer)
@@ -98,6 +100,8 @@ class Customer extends Model
         
         if (key_exists('password', $customerData) && $customerData['password'] == "") {
             $customerData['password'] = $originalCustomer->password;
+        } else {
+            $customerData['password'] = Hash::make($customerData['password']);
         }
 
         return $customerData;
@@ -168,13 +172,16 @@ class Customer extends Model
 
         $customer = DB::table('customers')
             ->where('email', '=', $email)
-            ->where('password', '=', $password)
             ->first();
 
         if (!$customer)
             throw new NotFoundException();
 
         $customer = Customer::hydrate([$customer])[0];
+
+        if (!Hash::check($password, $customer->password))
+            throw new NotFoundException();
+
         $customer->emptyPasswordForDataProtection();
 
         return $customer;

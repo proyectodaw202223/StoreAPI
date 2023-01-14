@@ -35,8 +35,8 @@ Route::group([
             'getById'
         )->name('getCustomerById');
         
-        Route::get(
-            '/credentials/{email}/{password}',
+        Route::post(
+            '/credentials',
             'getByEmailAndPassword'
         )->name('getCustomerByEmailAndPassword');
         
@@ -189,8 +189,8 @@ Route::group([
             'getById'
         )->name('getUserById');
 
-        Route::get(
-            '/{email}/{password}',
+        Route::post(
+            '/credentials',
             'getByEmailAndPassword'
         )->name('getUserByEmailAndPassword');
 
