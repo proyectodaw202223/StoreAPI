@@ -186,6 +186,49 @@ class ProductItem extends Model
         return ProductItem::hydrate($items->toArray())->all();
     }
 
+    public static function findItemsForSale(): array {
+        $currentDateTime = date('Y-m-d H:i:s');
+        $items = DB::select(
+            DB::raw(
+                "SELECT * FROM product_items WHERE ".
+                    "id IN (".
+                        "SELECT itemId FROM seasonal_sale_lines WHERE ".
+                            "seasonalSaleId IN (".
+                                "SELECT id FROM seasonal_sales WHERE ".
+                                    "isCanceled = ? AND ".
+                                    "validFromDateTime <= ? AND ".
+                                    "validToDateTime >= ? ".
+                            ")".
+                    ")"
+            ),
+            [0, $currentDateTime, $currentDateTime]
+        );
+
+        return ProductItem::hydrate($items)->all();
+    }
+
+    public static function findItemsForSaleLimit(int $limit): array {
+        $currentDateTime = date('Y-m-d H:i:s');
+        $items = DB::select(
+            DB::raw(
+                "SELECT * FROM product_items WHERE ".
+                    "id IN (".
+                        "SELECT itemId FROM seasonal_sale_lines WHERE ".
+                            "seasonalSaleId IN (".
+                                "SELECT id FROM seasonal_sales WHERE ".
+                                    "isCanceled = ? AND ".
+                                    "validFromDateTime <= ? AND ".
+                                    "validToDateTime >= ? ".
+                            ")".
+                    ")".
+                "LIMIT ?"
+            ),
+            [0, $currentDateTime, $currentDateTime, $limit]
+        );
+
+        return ProductItem::hydrate($items)->all();
+    }
+
     public static function appendProductToItemsArray(array $items): array {
         foreach ($items as $item) {
             $item->appendProduct();
