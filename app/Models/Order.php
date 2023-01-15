@@ -63,8 +63,12 @@ class Order extends Model
     private static function validateRequiredDataIsSetOnCreate(array $orderData): void {
         if (!isset($orderData['customerId']) ||
             !isset($orderData['amount']) ||
-            !isset($orderData['paymentDateTime']) ||
             !isset($orderData['status'])) {
+            throw new InvalidUpdateException();
+        }
+
+        if ($orderData['status'] != OrderStatus::CREATED->value &&
+            !isset($orderData['paymentDateTime'])) {
             throw new InvalidUpdateException();
         }
     }
@@ -115,9 +119,13 @@ class Order extends Model
     private static function validateRequiredDataIsSetOnUpdate(array $orderData): void {
         if (!isset($orderData['customerId']) ||
             !isset($orderData['amount']) ||
-            !isset($orderData['paymentDateTime']) ||
             !isset($orderData['status']) ||
             !isset($orderData['updated_at'])) {
+            throw new InvalidUpdateException();
+        }
+
+        if ($orderData['status'] != OrderStatus::CREATED->value &&
+            !isset($orderData['paymentDateTime'])) {
             throw new InvalidUpdateException();
         }
     }
@@ -219,8 +227,9 @@ class Order extends Model
     }
 
     public function appendOrderLines(): void {
+        $discountDateTime = ($this->paymentDateTime == "") ? date('Y-m-d H:i:s') : $this->paymentDateTime;
         $orderLines = OrderLine::findOrderLinesByOrderId($this->id);
-        $orderLines = OrderLine::appendItemToOrderLinesArray($orderLines, $this->paymentDateTime);
+        $orderLines = OrderLine::appendItemToOrderLinesArray($orderLines, $discountDateTime);
         $this->lines = $orderLines;
     }
 
