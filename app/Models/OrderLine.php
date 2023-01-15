@@ -215,6 +215,7 @@ class OrderLine extends Model
         $productItem = ProductItem::findById($this->itemId);
         $productItem->appendProduct();
         $productItem->appendSale($saleDateTime);
+        $productItem->appendImages();
         
         $this->productItem = $productItem;
     }
