@@ -83,7 +83,8 @@ class OrderController extends Controller
     private function createOrder(Request $request): JsonResponse {
         $requestData = $request->all();
         $order = Order::createOrder($requestData);
-        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $order->paymentDateTime);
+        $discountDateTime = ($order->paymentDateTime == "") ? date('Y-m-d H:i:s') : $order->paymentDateTime;
+        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $discountDateTime);
         $order->appendCustomer();
         
         return parent::createJsonResponse($order, Response::HTTP_OK);
