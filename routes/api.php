@@ -163,6 +163,11 @@ Route::group([
             'getAll'
         )->name('getAllItems');
 
+        Route::get(
+            'sale/{limit}',
+            'getForSale'
+        )->name('geItemsForSale');
+
         Route::post(
             '',
             'create'

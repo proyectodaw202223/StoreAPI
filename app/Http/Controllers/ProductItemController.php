@@ -49,6 +49,30 @@ class ProductItemController extends Controller
         return parent::createJsonResponse($items, Response::HTTP_OK);
     }
 
+    public function getForSale(int $limit): JsonResponse {
+        try {
+            return $this->getItemsForSale($limit);
+        } catch (CustomException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw new UnexpectedErrorException();
+        }
+    }
+
+    private function getItemsForSale(int $limit): JsonResponse {
+        if ($limit == 0) {
+            $items = ProductItem::findItemsForSale();
+        } else {
+            $items = ProductItem::findItemsForSaleLimit($limit);
+        }
+
+        $items = ProductItem::appendProductToItemsArray($items);
+        $items = ProductItem::appendImagesToItemsArray($items);
+        $items = ProductItem::appendSaleToItemsArray($items, date('Y-m-d H:i:s'));
+
+        return parent::createJsonResponse($items, Response::HTTP_OK);
+    }
+
     public function create(Request $request): JsonResponse {
         try {
             return $this->createItem($request);
