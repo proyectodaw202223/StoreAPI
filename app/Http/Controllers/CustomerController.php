@@ -41,7 +41,7 @@ class CustomerController extends Controller {
     }
 
     private function getCustomerByEmailAndPassword(Request $request): JsonResponse {
-        $requestData = $request->data();
+        $requestData = $request->all();
         $customer = Customer::findByEmailAndPasswordOrFail($requestData['email'], $requestData['password']);
         
         return parent::createJsonResponse($customer, Response::HTTP_OK);
