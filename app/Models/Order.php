@@ -227,7 +227,7 @@ class Order extends Model
     }
 
     public function appendOrderLines(): void {
-        $discountDateTime = ($this->paymentDateTime == "") ? date('Y-m-d H:i:s') : $this->paymentDateTime;
+        $discountDateTime = ($this->paymentDateTime == "" || $this->paymentDateTime == null) ? date('Y-m-d H:i:s') : $this->paymentDateTime;
         $orderLines = OrderLine::findOrderLinesByOrderId($this->id);
         $orderLines = OrderLine::appendItemToOrderLinesArray($orderLines, $discountDateTime);
         $this->lines = $orderLines;

@@ -84,7 +84,7 @@ class OrderLine extends Model
         $item = ProductItem::findById($orderLineData['itemId']);
         $product = Product::findById($item->productId);
         $order = Order::findById($orderLineData['orderId']);
-        $discountDateTime = ($order->paymentDateTime == "") ? date('Y-m-d H:i:s') : $order->paymentDateTime;
+        $discountDateTime = ($order->paymentDateTime == "" || $order->paymentDateTime == null) ? date('Y-m-d H:i:s') : $order->paymentDateTime;
         $seasonalSaleLine = SeasonalSaleLine::findByItemIdAndDateTime($item->id, $discountDateTime);
 
         if ($seasonalSaleLine)

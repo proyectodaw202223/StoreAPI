@@ -83,7 +83,7 @@ class OrderController extends Controller
     private function createOrder(Request $request): JsonResponse {
         $requestData = $request->all();
         $order = Order::createOrder($requestData);
-        $discountDateTime = ($order->paymentDateTime == "") ? date('Y-m-d H:i:s') : $order->paymentDateTime;
+        $discountDateTime = ($order->paymentDateTime == "" || $order->paymentDateTime == null) ? date('Y-m-d H:i:s') : $order->paymentDateTime;
         $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $discountDateTime);
         $order->appendCustomer();
         
@@ -103,7 +103,8 @@ class OrderController extends Controller
     private function updateOrder(Request $request, Order $order): JsonResponse {
         $requestData = $request->all();
         $order = Order::updateOrder($requestData, $order);
-        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $order->paymentDateTime);
+        $saleDateTime = ($order->paymentDateTime == "" || $order->paymentDateTime == null) ? date('Y-m-d H:i:s') : $order->paymentDateTime; 
+        $order->lines = OrderLine::appendItemToOrderLinesArray($order->lines, $saleDateTime);
         $order->appendCustomer();
 
         return parent::createJsonResponse($order, Response::HTTP_OK);
