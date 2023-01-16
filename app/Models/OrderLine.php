@@ -92,14 +92,14 @@ class OrderLine extends Model
         else
             $expectedPriceWithDiscount = $product->price;
         
-        if ($orderLineData['priceWithDiscount'] != $expectedPriceWithDiscount)
+        if (round($orderLineData['priceWithDiscount'], 2) != round($expectedPriceWithDiscount, 2))
             throw new OrderLinePriceMismatchException($orderLineData['priceWithDiscount'], $expectedPriceWithDiscount);
     }
 
     private static function validateAmountMatchesPriceSum(array $orderLineData): void {
         $expectedAmount = $orderLineData['priceWithDiscount'] * $orderLineData['quantity'];
 
-        if ($orderLineData['amount'] != $expectedAmount)
+        if (round($orderLineData['amount'], 2) != round($expectedAmount, 2))
             throw new OrderLineAmountMismatchException($orderLineData['amount'], $expectedAmount);
     }
 
