@@ -79,8 +79,7 @@ class Order extends Model
         foreach ($orderData['lines'] as $line) {
             $linesAmount += $line['amount'];
         }
-
-        if ($linesAmount != $orderData['amount']) {
+        if (round($linesAmount, 2) != round($orderData['amount'], 2)) {
             throw new OrderAmountMismatchException($orderData['amount'], $linesAmount);
         }
     }
