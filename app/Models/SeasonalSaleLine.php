@@ -178,10 +178,7 @@ class SeasonalSaleLine extends Model
         if (count($seasonalSaleLine) == 0)
             return null;
 
-        if (count($seasonalSaleLine) > 1)
-            throw new UnexpectedErrorException();
-
-        $seasonalSaleLine = SeasonalSaleLine::hydrate($seasonalSaleLine)[0];
+        $seasonalSaleLine = SeasonalSaleLine::hydrate([$seasonalSaleLine[0]])[0];
 
         return $seasonalSaleLine;
     }
