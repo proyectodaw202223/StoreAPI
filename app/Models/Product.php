@@ -169,52 +169,36 @@ class Product extends Model
     }
 
     public static function findProductsForSaleLimit(int $limit): array {
-        $currentDateTime = date('Y-m-d H:i:s');
-        $products = DB::select(
-            DB::raw(
-                "SELECT * FROM products WHERE ".
-                    "id IN (".
-                        "SELECT productId FROM product_items WHERE ".
-                            "id IN (".
-                                "SELECT itemId FROM seasonal_sale_lines WHERE ".
-                                    "seasonalSaleId IN (".
-                                        "SELECT id FROM seasonal_sales WHERE ".
-                                            "isCanceled = ? AND ".
-                                            "validFromDateTime <= ? AND ".
-                                            "validToDateTime >= ? ".
-                                        ")".
-                                ")".
-                        ")".
-                    "LIMIT ?"
-            ),
-            [0, $currentDateTime, $currentDateTime, $limit]
-        );
+        $products = DB::table('products')
+            ->join('product_items', 'product_items.productId', '=', 'products.id')
+            ->join('seasonal_sale_lines', 'seasonal_sale_lines.itemId', '=', 'product_items.id')
+            ->join('seasonal_sales', function($join) {
+                $join->on('seasonal_sales.id', '=', 'seasonal_sale_lines.seasonalSaleId')
+                ->where('seasonal_sales.isCanceled', '=', 0)
+                ->where('seasonal_sales.validFromDateTime', '<=', DB::raw('current_timestamp()'))
+                ->where('seasonal_sales.validToDateTime', '>=', DB::raw('current_timestamp()'));
+            })
+            ->select('products.*')
+            ->limit($limit)
+            ->get();
 
-        return Product::hydrate($products)->all();
+        return Product::hydrate($products->toArray())->all();
     }
 
     public static function findProductsForSale(): array {
-        $currentDateTime = date('Y-m-d H:i:s');
-        $products = DB::select(
-            DB::raw(
-                "SELECT * FROM products WHERE ".
-                    "id IN (".
-                        "SELECT productId FROM product_items WHERE ".
-                            "id IN (".
-                                "SELECT itemId FROM seasonal_sale_lines WHERE ".
-                                    "seasonalSaleId IN (".
-                                        "SELECT id FROM seasonal_sales WHERE ".
-                                            "isCanceled = ? AND ".
-                                            "validFromDateTime <= ? AND ".
-                                            "validToDateTime >= ? ".
-                                        ")".
-                                ")".
-                        ")"
-            ),
-            [0, $currentDateTime, $currentDateTime]
-        );
+        $products = DB::table('products')
+            ->join('product_items', 'product_items.productId', '=', 'products.id')
+            ->join('seasonal_sale_lines', 'seasonal_sale_lines.itemId', '=', 'product_items.id')
+            ->join('seasonal_sales', function($join) {
+                $join->on('seasonal_sales.id', '=', 'seasonal_sale_lines.seasonalSaleId')
+                ->where('seasonal_sales.isCanceled', '=', 0)
+                ->where('seasonal_sales.validFromDateTime', '<=', DB::raw('current_timestamp()'))
+                ->where('seasonal_sales.validToDateTime', '>=', DB::raw('current_timestamp()'));
+            })
+            ->select('products.*')
+            ->get();
 
-        return Product::hydrate($products)->all();
+        return Product::hydrate($products->toArray())->all();
     }
 
     public static function appendItemsToProductsArray(array $products): array {
