@@ -31,6 +31,7 @@ class ProductItem extends Model
     public static function createItem(array $itemData): ProductItem {
         $itemData = self::unsetProductFromItemData($itemData);
         $itemData = self::unsetImagesFromItemData($itemData);
+        $itemData = self::unsetSaleFromItemData($itemData);
         self::validateItemDataOnCreate($itemData);
 
         if (!isset($itemData['stock']))
@@ -42,16 +43,17 @@ class ProductItem extends Model
     }
 
     private static function unsetProductFromItemData(array $itemData): array {
-        if (isset($itemData['product']))
-            unset($itemData['product']);
-
+        unset($itemData['product']);
         return $itemData;
     }
 
     private static function unsetImagesFromItemData(array $itemData): array {
-        if (isset($itemData['images']))
-            unset($itemData['images']);
+        unset($itemData['images']);
+        return $itemData;
+    }
 
+    private static function unsetSaleFromItemData(array $itemData): array {
+        unset($itemData['sale']);
         return $itemData;
     }
 
@@ -95,6 +97,7 @@ class ProductItem extends Model
     public static function updateItem(array $itemData, ProductItem $item): ProductItem {
         $itemData = self::unsetProductFromItemData($itemData);
         $itemData = self::unsetImagesFromItemData($itemData);
+        $itemData = self::unsetSaleFromItemData($itemData);
         self::validateItemDataOnUpdate($itemData, $item);
         $item->update($itemData);
 
