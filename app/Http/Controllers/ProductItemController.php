@@ -45,6 +45,8 @@ class ProductItemController extends Controller
     private function getAllItems(): JsonResponse {
         $items = ProductItem::findAllItems();
         $items = ProductItem::appendProductToItemsArray($items);
+        $items = ProductItem::appendImagesToItemsArray($items);
+        $items = ProductItem::appendSaleToItemsArray($items, date('Y-m-d H:i:s'));
         
         return parent::createJsonResponse($items, Response::HTTP_OK);
     }
